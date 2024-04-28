@@ -103,20 +103,11 @@ function addActionsForHtmlUI(){
     //#endregion
 
     //#region [[Slider Events]]
-    let redSlider = document.getElementById('red');
-    let greenSlider = document.getElementById('green');
-    let blueSlider = document.getElementById('blue');
     let angleSlider = document.getElementById('angleSlider');
     let armSlider = document.getElementById('arm');
     let wristSlider = document.getElementById('wrist');
 
     // Add event listeners for slider input changes
-    redSlider.addEventListener('mouseup', function() {g_selectedColor[0] = redSlider.value/255;});
-
-    greenSlider.addEventListener('mouseup', function() {g_selectedColor[1] = greenSlider.value/255;});
-
-    blueSlider.addEventListener('mouseup', function() {g_selectedColor[2] = blueSlider.value/255;});
-    
     angleSlider.addEventListener('mousemove', function(){g_globalAngle = this.value; renderAllShapes();});
 
     armSlider.addEventListener('mousemove', function(){g_armAngle = this.value; renderAllShapes();});
@@ -135,6 +126,7 @@ function addActionsForHtmlUI(){
 
  function main() {
 
+    // [[ SET UP FUNCTIONS ]]
     setupWebGL();
     connectVariablesToGLSL();
     addActionsForHtmlUI();
@@ -145,8 +137,6 @@ function addActionsForHtmlUI(){
     // call anim fram
     requestAnimationFrame(tick);
  }
-
-var g_shapesList = []
 
  function click(ev) {
     var x = ev.clientX; // x coordinate of a mouse pointer
@@ -193,7 +183,7 @@ var g_shapesList = []
 
  function updateAnimationAngle(){
     if(g_armAnimation == true){
-            g_armAngle = (45*Math.sin(g_seconds)); // makes dat smooth animations
+        g_armAngle = (45*Math.sin(g_seconds)); // makes dat smooth animations
     }
     if(g_wristAnimation == true){
         g_wristAngle = (45*Math.sin(3*g_seconds)); // makes dat smooth animations
@@ -201,6 +191,7 @@ var g_shapesList = []
  }
 
  function renderAllShapes(){
+    var startTime = performance.now();
     // making the rotational matrix 
     var globalRotMat = new Matrix4().rotate(g_globalAngle,0,1,0); // turn the angle into a matrix
     gl.uniformMatrix4fv(u_GlobalRotateMatrix,false,globalRotMat.elements); // roate it based off that global rotate matrix
@@ -209,35 +200,123 @@ var g_shapesList = []
    // gl.clearColor(0,0,0,1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    // Draw an Animal
-    var body = new Cube();
-    body.color = [1,0,0,1];// red
-    // happens in reverse order
-    body.matrix.translate(-0.25,-0.75,0);
-    body.matrix.rotate(-5,1,0,0);
-    body.matrix.scale(0.5,0.3,0.5) // happens first
-    body.render();
 
-    var leftArm = new Cube();
-    leftArm.color = [1,1,0,1];// yellow
-    // happens in reverse order
-    leftArm.matrix.setTranslate(0,-0.5,0);
-    leftArm.matrix.rotate(-5,1,0,0);
-    leftArm.matrix.rotate(g_armAngle,0,0,1); // makes dat smooth animations
-    var leftArmCoord = new Matrix4(leftArm.matrix);
-    leftArm.matrix.scale(0.25,0.7,0.5) // happens first
-    leftArm.matrix.translate(-0.5,0,0);
-    leftArm.render();
+    // Draw an Animal 
 
-    var box = new Cube();
-    box.color = [1,0,1,1];// pink
-    // happens in reverse order
-    box.matrix = leftArmCoord;
-    box.matrix.translate(0,0.6,0,0);
-    box.matrix.rotate(g_wristAngle,0,0,1)
-    box.matrix.scale(0.3,0.3,0.3) // happens first
-    box.matrix.translate(-0.5,0,-1);
-    box.render();
+    //#region [[ LEGS ]]
+    // Front R leg
+    var frThigh = new Cube();
+    frThigh.color = [43/255, 39/255, 39/255,1]; // dark brown
+    frThigh.matrix.translate(-0.05,-.5,0.15);
+    frThigh.matrix.rotate(90,1,0,0);
+    frThigh.matrix.scale(0.15,0.15,0.25);
+    frThigh.render();
+
+    var frLeg = new Cube();
+    frLeg.color = [43/255, 39/255, 39/255,1]; // dark brown
+    frLeg.matrix.translate(0,-.75,0.2);
+    frLeg.matrix.rotate(90,1,0,0);
+    frLeg.matrix.scale(0.05,0.05,0.25);
+    frLeg.render();
+
+    var frFoot = new Cube();
+    frFoot.color = [43/255, 39/255, 39/255,1]; // dark brown
+    frFoot.matrix.translate(0,-0.75,0.185);
+    frFoot.matrix.rotate(90,1,0,0);
+    frFoot.matrix.scale(0.1,0.08,.05);
+    frFoot.render();
+    // -----------------------------------------------------
+    // Back L leg
+    var blThigh = new Cube();
+    blThigh.color = [0,1,1,1]; //teal 
+    blThigh.matrix.translate(-1,-.5,0.58);
+    //var blThighZ = blThigh.matrix.elements[2];
+    blThigh.matrix.rotate(90,1,0,0);
+    blThigh.matrix.scale(0.15,0.15,0.25);
+    blThigh.render();
+
+    var blLeg = new Cube();
+    blLeg.color = [0,1,1,1]; //teal 
+    blLeg.matrix.translate(-0.95,-0.75,0.6);
+    blLeg.matrix.rotate(90,1,0,0);
+    blLeg.matrix.scale(0.05,0.05,0.25);
+    blLeg.render();
+
+    var blFoot = new Cube();
+    blFoot.color = [0,1,1,1]; //teal 
+    blFoot.matrix.translate(-0.95,-0.75,0.585);
+    blFoot.matrix.rotate(90,1,0,0);
+    blFoot.matrix.scale(0.1,0.08,0.05);
+    blFoot.render();
+    // -----------------------------------------------------
+    // Front L leg
+    var flThigh = new Cube();
+    flThigh.color = [1,1,0,1]; // yellow
+    flThigh.matrix.translate(-0.05,-.5,0.35);
+    flThigh.matrix.rotate(90,1,0,0);
+    flThigh.matrix.scale(0.15,0.15,0.25);
+    flThigh.render();
+
+    var flLeg = new Cube();
+    flLeg.color = [1,1,0,1]; // yellow
+    flLeg.matrix.translate(0,-.75,0.4);
+    flLeg.matrix.rotate(90,1,0,0);
+    flLeg.matrix.scale(0.05,0.05,0.25);
+    flLeg.render();
+
+    var flFoot = new Cube();
+    flFoot.color = [1,1,0,1]; // yellow
+    flFoot.matrix.translate(0,-0.75,0.385);
+    flFoot.matrix.rotate(90,1,0,0);
+    flFoot.matrix.scale(0.1,0.08,0.05);
+    flFoot.render();
+    // -----------------------------------------------------
+    // Back R Leg
+    var brThigh = new Cube();
+    brThigh.color = [1,0,0,1]; // red
+    brThigh.matrix.translate(-1,-.5,-0.08);
+    brThigh.matrix.rotate(90,1,0,0);
+    brThigh.matrix.scale(0.15,0.15,0.25);
+    brThigh.render();
+
+    var brLeg = new Cube();
+    brLeg.color = [1,0,0,1]; // red
+    brLeg.matrix.translate(-0.95,-.75,0);
+    brLeg.matrix.rotate(90,1,0,0);
+    brLeg.matrix.scale(0.05,0.05,0.25);
+    brLeg.render();
+
+    var brFoot = new Cube();
+    brFoot.color = [1,0,0,1]; // red
+    brFoot.matrix.translate(-0.95,-0.75,-0.015);
+    brFoot.matrix.rotate(90,1,0,0);
+    brFoot.matrix.scale(0.1,0.08,0.05);
+    brFoot.render();
+    // -----------------------------------------------------
+    //#endregion
+
+    // #region [[ BODY ]]
+    var bBody = new Octahedron();;
+    // var bBody = new Cube();
+    bBody.color = [1,1,1,1];// red
+    bBody.matrix.translate(-0.15,0.5,0.4);
+    bBody.matrix.rotate(-45,1,0,0.40);
+    bBody.matrix.scale(0.55,0.75,0.75) // happens first
+    bBody.render();
+
+    var fBody = new Octahedron();;
+    // var bBody = new Cube();
+    fBody.color = [1,1,1,1];// red
+    fBody.matrix.translate(0.15,0.5,0.4);
+    fBody.matrix.rotate(45,1,0,0.40);
+    fBody.matrix.scale(0.55,0.75,0.75) // happens first
+    fBody.render();
+    //#endregion
+
+
+    // Check trhe time at the end of the function, and show on webpage
+    var duration = performance.now() - startTime;
+    sendTextToHTML('ms: '+ Math.floor(duration) + ' fps: ' + Math.floor(10000/duration)/10, 'fps');
 }
 
 function renderBerry(){
@@ -253,4 +332,13 @@ function renderBerry(){
        // console.log(berryList[i]);
         berryList[i].render();
     }
+}
+
+function sendTextToHTML(text,htmlID){
+    var htmlElm = document.getElementById(htmlID);
+    if(!htmlElm){
+        console.log('Failed to get ' + htmlID + ' from HTML');
+        return;
+    }
+    htmlElm.innerHTML = text;
 }

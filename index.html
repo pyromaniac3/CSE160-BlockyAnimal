@@ -9,49 +9,25 @@
     <script src="/lib/cuon-utils.js"></script>
     <script src="/lib/webgl-debug.js"></script>
     <script src="/lib/cuon-matrix.js"></script>
-    <script src="/Shape Classes/Berry.js"></script>
-    <script src="/Shape Classes/Circle.js"></script>
-    <script src="/Shape Classes/Point.js"></script>
-    <script src="/Shape Classes/Triangle.js"></script>
+    <script src="Shape Classes/Triangle.js"></script>
     <script src="Shape Classes/Cube.js"></script>
+    <script src="Shape Classes/Octahedron.js"></script>
     <script src="blockyAnimal.js"></script>
 </head>
 
 <body onload="main()">
 <div id="container">
     <div id="canvas-container">
-        <canvas id="webgl" width="400" height="400">
+        <canvas id="webgl" width="800" height="800">
             Please use a browser that supports "canvas"
         </canvas>
+        <!-- Current Frame Rate -->
+        <p id="fps"> XXX </p>
         <br><button class="lavender-button" id="clearCanvas">Clear Canvas</button><br>
     </div>
-    <!-- Drawing Shape Type Buttons -->
+    <!-- Animal Settings -->
     <div id="controls-container">
-        <!-- Drawing Mode -->
-        <div class="group">
-            <h2>Drawing Mode</h2>
-            <button id="square" class="lavender-button">Square</button>
-            <button id="triangle" class="lavender-button">Triangle</button>
-            <button id="circle" class="lavender-button">Circle</button>
-        </div>
-        <!-- Shape Color and Sliders -->
-        <div class="group">
-            <h2>Color</h2>
-            <!-- <h3>Background Color</h3>
-            <input type="color" id="canvas-color" name="canvas-color"> -->
-            <h3>Brush Color</h3>
-            <div>
-                <label for="red">Red</label>
-                <input type="range" id="red" name="red" min="0" max="255" value="0" />
-                <br>
-                <label for="green">Green</label>
-                <input type="range" id="green" name="green" min="0" max="255" value="0" />
-                <br>
-                <label for="blue">Blue</label>
-                <input type="range" id="blue" name="blue" min="0" max="255" value="0"/>
-            </div>
-            <!-- Size Sliders -->
-        </div>
+        <!-- Animation Sliders -->
         <div class="group">
             <h2>Animation Settings</h3>
             <div>
@@ -76,11 +52,6 @@
                 <label for="size">Camera Angle</label>
                 <input type="range" id="angleSlider" name="size" min="0" max="90" value="0"/>
             </div>
-        </div>
-        <!-- Premade Images -->
-        <div class="group">
-            <h2>Premade Images</h2>
-            <button id="berry" class="berry lavender-button">Berry!</button>
         </div>
     </div>
 </div>

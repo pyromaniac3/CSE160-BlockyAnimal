@@ -17,12 +17,7 @@
     gl_FragColor = u_FragColor;
     }`
 
-// Constants
-const POINT = 0;
-const TRIANGLE = 1;
-const CIRCLE = 2;
-
-// Global Variables
+//#region [[Global Variables]]
 let canvas;
 let gl;
 let a_Position;
@@ -31,16 +26,14 @@ let u_Size;
 let u_ModelMatrix;
 let u_GlobalRotateMatrix;
 let g_globalAngle; 
-
-// base variables for color and size
-var g_selectedColor = [1.0, 1.0, 1.0, 1.0];
-var g_selectedSize = 5;
-var g_selectedType=POINT;
-var g_segments = 10;
+let g_armAngle;
+let g_wristAngle;
+let g_armAnimation = false;
+let g_wristAnimation = false;
 
 // drawing
 var berryList = [];
-
+//#endregion
 
 function setupWebGL(){
     // Retrieve <canvas> element
@@ -53,6 +46,8 @@ function setupWebGL(){
         console.log('Failed to get the rendering context for WebGL');
     return;
     }
+
+    gl.enable(gl.DEPTH_TEST);
 }
 
 function connectVariablesToGLSL(){
@@ -97,14 +92,14 @@ function connectVariablesToGLSL(){
 }
 
 function addActionsForHtmlUI(){
-    //#region [[Button to draw berry]]
-    document.getElementById('berry').onclick =  function(){drawBerry()};
-    //#endregion
+    //#region [[Buttons]] 
 
-    //#region [[Button Events Shape Type]]
-    document.getElementById('square').onclick = function(){g_selectedType=POINT};
-    document.getElementById('triangle').onclick = function(){g_selectedType=TRIANGLE};
-    document.getElementById('circle').onclick = function(){g_selectedType=CIRCLE};
+    document.getElementById('ArmOn').onclick =  function(){g_armAnimation = true};
+    document.getElementById('ArmOff').onclick =  function(){g_armAnimation = false};
+
+    document.getElementById('WristOn').onclick =  function(){g_wristAnimation = true};
+    document.getElementById('WristOff').onclick =  function(){g_wristAnimation = false};
+    
     //#endregion
 
     //#region [[Slider Events]]
@@ -112,6 +107,8 @@ function addActionsForHtmlUI(){
     let greenSlider = document.getElementById('green');
     let blueSlider = document.getElementById('blue');
     let angleSlider = document.getElementById('angleSlider');
+    let armSlider = document.getElementById('arm');
+    let wristSlider = document.getElementById('wrist');
 
     // Add event listeners for slider input changes
     redSlider.addEventListener('mouseup', function() {g_selectedColor[0] = redSlider.value/255;});
@@ -119,10 +116,13 @@ function addActionsForHtmlUI(){
     greenSlider.addEventListener('mouseup', function() {g_selectedColor[1] = greenSlider.value/255;});
 
     blueSlider.addEventListener('mouseup', function() {g_selectedColor[2] = blueSlider.value/255;});
-
-    circleSize.addEventListener('input', function(){g_segments = circleSize.value});
     
-    angleSlider.addEventListener('mouseup', function(){g_globalAngle = this.value; renderAllShapes();});
+    angleSlider.addEventListener('mousemove', function(){g_globalAngle = this.value; renderAllShapes();});
+
+    armSlider.addEventListener('mousemove', function(){g_armAngle = this.value; renderAllShapes();});
+
+    wristSlider.addEventListener('mousemove', function(){g_wristAngle = this.value; renderAllShapes();});
+    
     //#endregion
 
     //#region [[Clear canvas]]
@@ -131,12 +131,6 @@ function addActionsForHtmlUI(){
         renderAllShapes();
     };
     //#endregion 
-
-    //#region [[Change Point Size]]
-    let sizeSlider = document.getElementById('size');
-
-    sizeSlider.addEventListener('input', function() {g_selectedSize = sizeSlider.value;});
-    //#endregion
 }
 
  function main() {
@@ -145,35 +139,12 @@ function addActionsForHtmlUI(){
     connectVariablesToGLSL();
     addActionsForHtmlUI();
 
-    // Register function (event handler) to be called on a mouse press
-    // [[NO LONGER WAITING FOR CLICKS]]
-    // canvas.onmousedown = click;
-    // canvas.onmousemove = function(ev){if(ev.buttons == 1){click(ev)}};
-
+    // Set Canvas Color
     gl.clearColor(0,0,0, 1.0);
-    // Clear <canvas>
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    // var colorPicker = document.getElementById("canvas-color");
-    // colorPicker.addEventListener("input", function() {
-    //     var rgb = hexToRgb(colorPicker.value);
-    //     var clearColor = rgbToFloat(rgb.r, rgb.g, rgb.b);
-
-    //     gl.clearColor(clearColor[0], clearColor[1], clearColor[2], 1.0);
-    //     gl.clear(gl.COLOR_BUFFER_BIT);
-    // });
-    renderAllShapes();
+   
+    // call anim fram
+    requestAnimationFrame(tick);
  }
-//  function rgbToFloat(r, g, b) {
-//     return [r / 255, g / 255, b / 255];
-// }
-//  function hexToRgb(hex) {
-//     var bigint = parseInt(hex.substring(1), 16);
-//     var r = (bigint >> 16) & 255;
-//     var g = (bigint >> 8) & 255;
-//     var b = bigint & 255;
-//     return { r, g, b };
-// }
 
 var g_shapesList = []
 
@@ -204,38 +175,69 @@ var g_shapesList = []
     renderAllShapes();
  }
 
+ var g_startTime = performance.now()/1000;
+ var g_seconds = performance.now/1000-g_startTime;
+ 
+ function tick(){
+    g_seconds = performance.now()/1000-g_startTime;
+    
+    // Update Animation Angles;
+    updateAnimationAngle();
+
+    // Draw Everything
+    renderAllShapes();
+    
+    // Call this function back to keep updating the anims
+    requestAnimationFrame(tick);
+ }
+
+ function updateAnimationAngle(){
+    if(g_armAnimation == true){
+            g_armAngle = (45*Math.sin(g_seconds)); // makes dat smooth animations
+    }
+    if(g_wristAnimation == true){
+        g_wristAngle = (45*Math.sin(3*g_seconds)); // makes dat smooth animations
+}
+ }
+
  function renderAllShapes(){
-    // Clear <canvas>
-    gl.clearColor(0,0,0,1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    var len = g_shapesList.length;
-
+    // making the rotational matrix 
     var globalRotMat = new Matrix4().rotate(g_globalAngle,0,1,0); // turn the angle into a matrix
     gl.uniformMatrix4fv(u_GlobalRotateMatrix,false,globalRotMat.elements); // roate it based off that global rotate matrix
 
-    // for(var i = 0; i < len; i++) {
-    //     //console.log(g_shapesList[i]);
-    //     g_shapesList[i].render();
-    // }
-    // Draw a Triangle
-    drawTriangle3D([-1,0,0, -0.5,-1,0, 0,0,0]);
-
+    // Clear Canvas
+   // gl.clearColor(0,0,0,1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT);
     // Draw an Animal
     var body = new Cube();
     body.color = [1,0,0,1];// red
     // happens in reverse order
-    body.matrix.translate(-0.25,-0.5,0);
-    body.matrix.scale(0.5,1,-0.5) // happens first
+    body.matrix.translate(-0.25,-0.75,0);
+    body.matrix.rotate(-5,1,0,0);
+    body.matrix.scale(0.5,0.3,0.5) // happens first
     body.render();
 
     var leftArm = new Cube();
     leftArm.color = [1,1,0,1];// yellow
     // happens in reverse order
-    leftArm.matrix.translate(0.7,0,0);
-    leftArm.matrix.rotate(45,0,0,1);
+    leftArm.matrix.setTranslate(0,-0.5,0);
+    leftArm.matrix.rotate(-5,1,0,0);
+    leftArm.matrix.rotate(g_armAngle,0,0,1); // makes dat smooth animations
+    var leftArmCoord = new Matrix4(leftArm.matrix);
     leftArm.matrix.scale(0.25,0.7,0.5) // happens first
+    leftArm.matrix.translate(-0.5,0,0);
     leftArm.render();
+
+    var box = new Cube();
+    box.color = [1,0,1,1];// pink
+    // happens in reverse order
+    box.matrix = leftArmCoord;
+    box.matrix.translate(0,0.6,0,0);
+    box.matrix.rotate(g_wristAngle,0,0,1)
+    box.matrix.scale(0.3,0.3,0.3) // happens first
+    box.matrix.translate(-0.5,0,-1);
+    box.render();
 }
 
 function renderBerry(){

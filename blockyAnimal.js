@@ -202,25 +202,28 @@ function addActionsForHtmlUI(){
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     // Draw an Animal 
+    // [[ animal colors ]]
+    let darkBrown = [43/255, 39/255, 39/255,1]; // dark brown
+    let tan = [217/255, 193/255, 182/255,1]; //tan
 
     //#region [[ LEGS ]]
     // Front R leg
     var frThigh = new Cube();
-    frThigh.color = [43/255, 39/255, 39/255,1]; // dark brown
+    frThigh.color = darkBrown; // dark brown
     frThigh.matrix.translate(-0.05,-.5,0.15);
     frThigh.matrix.rotate(90,1,0,0);
     frThigh.matrix.scale(0.15,0.15,0.25);
     frThigh.render();
 
     var frLeg = new Cube();
-    frLeg.color = [43/255, 39/255, 39/255,1]; // dark brown
+    frLeg.color = darkBrown; // dark brown
     frLeg.matrix.translate(0,-.75,0.2);
     frLeg.matrix.rotate(90,1,0,0);
     frLeg.matrix.scale(0.05,0.05,0.25);
     frLeg.render();
 
     var frFoot = new Cube();
-    frFoot.color = [43/255, 39/255, 39/255,1]; // dark brown
+    frFoot.color = darkBrown; // dark brown
     frFoot.matrix.translate(0,-0.75,0.185);
     frFoot.matrix.rotate(90,1,0,0);
     frFoot.matrix.scale(0.1,0.08,.05);
@@ -228,22 +231,21 @@ function addActionsForHtmlUI(){
     // -----------------------------------------------------
     // Back L leg
     var blThigh = new Cube();
-    blThigh.color = [0,1,1,1]; //teal 
+    blThigh.color = tan; //teal 
     blThigh.matrix.translate(-1,-.5,0.58);
-    //var blThighZ = blThigh.matrix.elements[2];
     blThigh.matrix.rotate(90,1,0,0);
     blThigh.matrix.scale(0.15,0.15,0.25);
     blThigh.render();
 
     var blLeg = new Cube();
-    blLeg.color = [0,1,1,1]; //teal 
+    blLeg.color = darkBrown; // dark brown
     blLeg.matrix.translate(-0.95,-0.75,0.6);
     blLeg.matrix.rotate(90,1,0,0);
     blLeg.matrix.scale(0.05,0.05,0.25);
     blLeg.render();
 
     var blFoot = new Cube();
-    blFoot.color = [0,1,1,1]; //teal 
+    blFoot.color = darkBrown; // dark brown
     blFoot.matrix.translate(-0.95,-0.75,0.585);
     blFoot.matrix.rotate(90,1,0,0);
     blFoot.matrix.scale(0.1,0.08,0.05);
@@ -251,21 +253,21 @@ function addActionsForHtmlUI(){
     // -----------------------------------------------------
     // Front L leg
     var flThigh = new Cube();
-    flThigh.color = [1,1,0,1]; // yellow
+    flThigh.color = darkBrown; // dark brown
     flThigh.matrix.translate(-0.05,-.5,0.35);
     flThigh.matrix.rotate(90,1,0,0);
     flThigh.matrix.scale(0.15,0.15,0.25);
     flThigh.render();
 
     var flLeg = new Cube();
-    flLeg.color = [1,1,0,1]; // yellow
+    flLeg.color = darkBrown; // dark brown
     flLeg.matrix.translate(0,-.75,0.4);
     flLeg.matrix.rotate(90,1,0,0);
     flLeg.matrix.scale(0.05,0.05,0.25);
     flLeg.render();
 
     var flFoot = new Cube();
-    flFoot.color = [1,1,0,1]; // yellow
+    flFoot.color = darkBrown; // dark brown
     flFoot.matrix.translate(0,-0.75,0.385);
     flFoot.matrix.rotate(90,1,0,0);
     flFoot.matrix.scale(0.1,0.08,0.05);
@@ -273,21 +275,21 @@ function addActionsForHtmlUI(){
     // -----------------------------------------------------
     // Back R Leg
     var brThigh = new Cube();
-    brThigh.color = [1,0,0,1]; // red
+    brThigh.color = tan; // red
     brThigh.matrix.translate(-1,-.5,-0.08);
     brThigh.matrix.rotate(90,1,0,0);
     brThigh.matrix.scale(0.15,0.15,0.25);
     brThigh.render();
 
     var brLeg = new Cube();
-    brLeg.color = [1,0,0,1]; // red
+    brLeg.color = darkBrown; // dark brown
     brLeg.matrix.translate(-0.95,-.75,0);
     brLeg.matrix.rotate(90,1,0,0);
     brLeg.matrix.scale(0.05,0.05,0.25);
     brLeg.render();
 
     var brFoot = new Cube();
-    brFoot.color = [1,0,0,1]; // red
+    brFoot.color = darkBrown; // dark brown
     brFoot.matrix.translate(-0.95,-0.75,-0.015);
     brFoot.matrix.rotate(90,1,0,0);
     brFoot.matrix.scale(0.1,0.08,0.05);

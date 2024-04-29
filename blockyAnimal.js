@@ -25,17 +25,19 @@ let u_FragColor;
 let u_Size;
 let u_ModelMatrix;
 let u_GlobalRotateMatrix;
-let g_globalAngle; 
-let g_tail1Angle;
-let g_tail2Angle;
-let g_tail3Angle;
+let g_globalAngle = 0; 
+let g_tail1Angle = 15;
+let g_tail2Angle = 27;
+let g_tail3Angle = 27;
 let g_tail1Sway = 0;
 let g_IdleAnim = false;
+let g_dance = false;
 let g_brLeg = 90;
 let g_frLeg = 90;
 let g_blLeg = 90;
 let g_flLeg = 90;
 let g_head = 0;
+let g_body = 0;
 
 // drawing
 var berryList = [];
@@ -100,8 +102,8 @@ function connectVariablesToGLSL(){
 function addActionsForHtmlUI(){
     //#region [[Buttons]] 
 
-    document.getElementById('IdleOn').onclick =  function(){g_IdleAnim = true};
-    document.getElementById('IdleOff').onclick =  function(){g_IdleAnim = false};
+    document.getElementById('IdleOn').onclick =  function(){g_IdleAnim = true; g_dance = false;};
+    document.getElementById('IdleOff').onclick =  function(){g_IdleAnim = false;};
     //#endregion
 
     //#region [[Slider Events]]
@@ -121,13 +123,6 @@ function addActionsForHtmlUI(){
     
     
     //#endregion
-
-    //#region [[Clear canvas]]
-    document.getElementById('clearCanvas').onclick = function(){
-        g_shapesList=[];
-        renderAllShapes();
-    };
-    //#endregion 
 }
 
  function main() {
@@ -169,23 +164,26 @@ function addActionsForHtmlUI(){
     // Update Animation Angles;
     updateAnimationAngle();
 
+    //#region [[ NEW ANIM ]]
     // Check for Shift + Click
     document.addEventListener("click", function(event) {
         // Check if the shift key is pressed
         if (event.shiftKey) {
             // Execute your code here for shift + click
-            g_IdleAnim = true;
+            g_IdleAnim = false;
+            g_dance = true;
         }
     });
-    
+
     // Check for End Dance w/ ESC
     document.addEventListener("keydown", function(event) {
         // Check if the shift key is pressed
         if(event.key === "Escape") {
             // Execute your code here for shift + click
-            g_IdleAnim = false;
+            g_dance = false;
         }
     });
+    //#endregion
 
     // Draw Everything
     renderAllShapes();
@@ -195,13 +193,22 @@ function addActionsForHtmlUI(){
  }
 
  function updateAnimationAngle(){
+
     if(g_IdleAnim == true){
-        // Adjust the frequency and magnitude to control the motion
+
         var frequency = 5; // adjust this value to change the speed of the movement
         var magnitude = 2; // adjust this value to change the extent of the movement
 
-        // Use sine or cosine wave to create smooth back and forth motion
-        // You can adjust the phase to control the starting position of the movement
+        g_tail1Sway = magnitude * Math.cos(frequency * g_seconds); 
+        
+        g_body = (Math.cos(frequency* g_seconds))/100;
+    }
+
+    if(g_dance == true){
+        // Adjust the frequency and magnitude to control the motion
+        var frequency = 10; // adjust this value to change the speed of the movement
+        var magnitude = 2; // adjust this value to change the extent of the movement
+
         g_brLeg = magnitude * Math.cos(frequency * g_seconds); 
         g_blLeg = -magnitude * Math.cos(frequency * g_seconds); 
         g_frLeg = magnitude * Math.cos(frequency * g_seconds); 
@@ -209,7 +216,7 @@ function addActionsForHtmlUI(){
         g_head = 1 * Math.cos(frequency * g_seconds); 
         g_tail1Sway = magnitude * Math.cos(frequency * g_seconds); 
         
-        // Adjusting for the legs' vertical axes
+        // So the Angle is right for the legs
         var verticalAngle = 270
         g_brLeg -= verticalAngle;
         g_blLeg -= verticalAngle;
@@ -241,13 +248,13 @@ function addActionsForHtmlUI(){
     var thighB = [-0.25,-.5,0.15]; // adjusting values will move both back legs uniformly
 
     // body base
-    var body = [0.15,0.25,0.025];
+    var body = [0.15,0.25+g_body,0.025];
 
     // head base
-    var headB = [.3,-.3,.25];
+    var headB = [.3,-.3+g_body,.25];
 
     // tail base
-    var tailB = [-0.035,-0.15,0.38];
+    var tailB = [-0.035,-0.15+g_body,0.38];
 
     //#region [[ LEGS ]]
     // Front R leg

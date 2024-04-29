@@ -113,13 +113,13 @@ function addActionsForHtmlUI(){
     let tail3Slider = document.getElementById('tail3');
 
     // Add event listeners for slider input changes
-    angleSlider.addEventListener('mousemove', function(){g_globalAngle = this.value; renderAllShapes();});
+    angleSlider.addEventListener('mousemove', function(){g_globalAngle = this.value; renderScene();});
 
-    tail1Slider.addEventListener('mousemove', function(){g_tail1Angle = this.value; renderAllShapes();});
+    tail1Slider.addEventListener('mousemove', function(){g_tail1Angle = this.value; renderScene();});
 
-    tail2Slider.addEventListener('mousemove', function(){g_tail2Angle = this.value; renderAllShapes();});
+    tail2Slider.addEventListener('mousemove', function(){g_tail2Angle = this.value; renderScene();});
 
-    tail3Slider.addEventListener('mousemove', function(){g_tail3Angle = this.value; renderAllShapes();});
+    tail3Slider.addEventListener('mousemove', function(){g_tail3Angle = this.value; renderScene();});
     
     
     //#endregion
@@ -137,22 +137,6 @@ function addActionsForHtmlUI(){
     
     // call anim fram
     requestAnimationFrame(tick);
- }
-
- function click(ev) {
-    var x = ev.clientX; // x coordinate of a mouse pointer
-    var y = ev.clientY; // y coordinate of a mouse pointer
-   // console.log(x + "  "+ y)
-    var rect = ev.target.getBoundingClientRect();
-
-    x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
-    y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
-    //console.log(x + "  "+ y)
-    // rotate angle based on mouse position
-
-    // g_globalAngle = 
-
-    renderAllShapes();
  }
 
  var g_startTime = performance.now()/1000;
@@ -186,7 +170,7 @@ function addActionsForHtmlUI(){
     //#endregion
 
     // Draw Everything
-    renderAllShapes();
+    renderScene();
     
     // Call this function back to keep updating the anims
     requestAnimationFrame(tick);
@@ -225,7 +209,7 @@ function addActionsForHtmlUI(){
     }
  }
 
- function renderAllShapes(){
+ function renderScene(){
     var startTime = performance.now();
     // making the rotational matrix 
     var globalRotMat = new Matrix4().rotate(g_globalAngle,0,1,0); // turn the angle into a matrix
@@ -491,21 +475,6 @@ function addActionsForHtmlUI(){
     // Check trhe time at the end of the function, and show on webpage
     var duration = performance.now() - startTime;
     sendTextToHTML('ms: '+ Math.floor(duration) + ' fps: ' + Math.floor(10000/duration)/10, 'fps');
-}
-
-function renderBerry(){
-    // Clear <canvas>
-    // Set the color for clearing <canvas>
-    gl.clearColor(242/255, 230/255, 157/255, 1.0);
-    // Clear <canvas>
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    var len = berryList.length;
-    //console.log("Len berryList = "+len);
-    for(var i = 0; i < len; i++) {
-       // console.log(berryList[i]);
-        berryList[i].render();
-    }
 }
 
 function sendTextToHTML(text,htmlID){

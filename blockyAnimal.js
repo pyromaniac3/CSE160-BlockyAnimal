@@ -26,10 +26,16 @@ let u_Size;
 let u_ModelMatrix;
 let u_GlobalRotateMatrix;
 let g_globalAngle; 
-let g_armAngle;
-let g_wristAngle;
-let g_armAnimation = false;
-let g_wristAnimation = false;
+let g_tail1Angle;
+let g_tail2Angle;
+let g_tail3Angle;
+let g_tail1Sway = 0;
+let g_IdleAnim = false;
+let g_brLeg = 90;
+let g_frLeg = 90;
+let g_blLeg = 90;
+let g_flLeg = 90;
+let g_head = 0;
 
 // drawing
 var berryList = [];
@@ -94,25 +100,25 @@ function connectVariablesToGLSL(){
 function addActionsForHtmlUI(){
     //#region [[Buttons]] 
 
-    document.getElementById('ArmOn').onclick =  function(){g_armAnimation = true};
-    document.getElementById('ArmOff').onclick =  function(){g_armAnimation = false};
-
-    document.getElementById('WristOn').onclick =  function(){g_wristAnimation = true};
-    document.getElementById('WristOff').onclick =  function(){g_wristAnimation = false};
-    
+    document.getElementById('IdleOn').onclick =  function(){g_IdleAnim = true};
+    document.getElementById('IdleOff').onclick =  function(){g_IdleAnim = false};
     //#endregion
 
     //#region [[Slider Events]]
     let angleSlider = document.getElementById('angleSlider');
-    let armSlider = document.getElementById('arm');
-    let wristSlider = document.getElementById('wrist');
+    let tail1Slider = document.getElementById('tail1');
+    let tail2Slider = document.getElementById('tail2');
+    let tail3Slider = document.getElementById('tail3');
 
     // Add event listeners for slider input changes
     angleSlider.addEventListener('mousemove', function(){g_globalAngle = this.value; renderAllShapes();});
 
-    armSlider.addEventListener('mousemove', function(){g_armAngle = this.value; renderAllShapes();});
+    tail1Slider.addEventListener('mousemove', function(){g_tail1Angle = this.value; renderAllShapes();});
 
-    wristSlider.addEventListener('mousemove', function(){g_wristAngle = this.value; renderAllShapes();});
+    tail2Slider.addEventListener('mousemove', function(){g_tail2Angle = this.value; renderAllShapes();});
+
+    tail3Slider.addEventListener('mousemove', function(){g_tail3Angle = this.value; renderAllShapes();});
+    
     
     //#endregion
 
@@ -132,8 +138,8 @@ function addActionsForHtmlUI(){
     addActionsForHtmlUI();
 
     // Set Canvas Color
-    gl.clearColor(0,0,0, 1.0);
-   
+    gl.clearColor(75/255, 97/255, 84/255, 1.0);
+    
     // call anim fram
     requestAnimationFrame(tick);
  }
@@ -147,20 +153,9 @@ function addActionsForHtmlUI(){
     x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
     y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
     //console.log(x + "  "+ y)
-    // create a point 
-    let point;
-    if(g_selectedType==POINT){
-        point = new Point();
-    }else if(g_selectedType==TRIANGLE){
-        point = new Triangle();
-    }else{
-        point = new Circle();
-        point.segments= g_segments;
-    }
-    point.color = g_selectedColor.slice();
-    point.position = ([x,y]);
-    point.size = g_selectedSize;
-    g_shapesList.push(point);
+    // rotate angle based on mouse position
+
+    // g_globalAngle = 
 
     renderAllShapes();
  }
@@ -170,9 +165,27 @@ function addActionsForHtmlUI(){
  
  function tick(){
     g_seconds = performance.now()/1000-g_startTime;
-    
+
     // Update Animation Angles;
     updateAnimationAngle();
+
+    // Check for Shift + Click
+    document.addEventListener("click", function(event) {
+        // Check if the shift key is pressed
+        if (event.shiftKey) {
+            // Execute your code here for shift + click
+            g_IdleAnim = true;
+        }
+    });
+    
+    // Check for End Dance w/ ESC
+    document.addEventListener("keydown", function(event) {
+        // Check if the shift key is pressed
+        if(event.key === "Escape") {
+            // Execute your code here for shift + click
+            g_IdleAnim = false;
+        }
+    });
 
     // Draw Everything
     renderAllShapes();
@@ -182,12 +195,27 @@ function addActionsForHtmlUI(){
  }
 
  function updateAnimationAngle(){
-    if(g_armAnimation == true){
-        g_armAngle = (45*Math.sin(g_seconds)); // makes dat smooth animations
+    if(g_IdleAnim == true){
+        // Adjust the frequency and magnitude to control the motion
+        var frequency = 5; // adjust this value to change the speed of the movement
+        var magnitude = 2; // adjust this value to change the extent of the movement
+
+        // Use sine or cosine wave to create smooth back and forth motion
+        // You can adjust the phase to control the starting position of the movement
+        g_brLeg = magnitude * Math.cos(frequency * g_seconds); 
+        g_blLeg = -magnitude * Math.cos(frequency * g_seconds); 
+        g_frLeg = magnitude * Math.cos(frequency * g_seconds); 
+        g_flLeg = -magnitude * Math.cos(frequency * g_seconds); 
+        g_head = 1 * Math.cos(frequency * g_seconds); 
+        g_tail1Sway = magnitude * Math.cos(frequency * g_seconds); 
+        
+        // Adjusting for the legs' vertical axes
+        var verticalAngle = 270
+        g_brLeg -= verticalAngle;
+        g_blLeg -= verticalAngle;
+        g_frLeg -= verticalAngle;
+        g_flLeg -= verticalAngle;
     }
-    if(g_wristAnimation == true){
-        g_wristAngle = (45*Math.sin(3*g_seconds)); // makes dat smooth animations
-}
  }
 
  function renderAllShapes(){
@@ -205,93 +233,126 @@ function addActionsForHtmlUI(){
     // [[ animal colors ]]
     let darkBrown = [43/255, 39/255, 39/255,1]; // dark brown
     let tan = [217/255, 193/255, 182/255,1]; //tan
+    let white = [1,1,1,1];
+
+    // [[ base animal translations ]]
+    // legs 
+    var thighF = [0.25,-.5,-0.15];  // adjusting values will move both front legs uniformly
+    var thighB = [-0.25,-.5,0.15]; // adjusting values will move both back legs uniformly
+
+    // body base
+    var body = [0.15,0.25,0.025];
+
+    // head base
+    var headB = [.3,-.3,.25];
+
+    // tail base
+    var tailB = [-0.035,-0.15,0.38];
 
     //#region [[ LEGS ]]
     // Front R leg
     var frThigh = new Cube();
     frThigh.color = darkBrown; // dark brown
-    frThigh.matrix.translate(-0.05,-.5,0.15);
-    frThigh.matrix.rotate(90,1,0,0);
+    frThigh.matrix.translate(thighF[0],thighF[1]-0.05,thighF[2]);
+    frThigh.matrix.rotate(g_frLeg,1,0,0);
+    var frThighMat = new Matrix4(frThigh.matrix);
     frThigh.matrix.scale(0.15,0.15,0.25);
     frThigh.render();
 
     var frLeg = new Cube();
     frLeg.color = darkBrown; // dark brown
-    frLeg.matrix.translate(0,-.75,0.2);
-    frLeg.matrix.rotate(90,1,0,0);
+    frLeg.matrix = frThighMat;
+    frLeg.matrix.translate(thighF[0]-0.2,thighF[1]+0.55,thighF[2]+0.33);
+    //frLeg.matrix.rotate(90,1,0,0);
+    var frLegMat = new Matrix4(frLeg.matrix);
     frLeg.matrix.scale(0.05,0.05,0.25);
     frLeg.render();
 
     var frFoot = new Cube();
     frFoot.color = darkBrown; // dark brown
-    frFoot.matrix.translate(0,-0.75,0.185);
-    frFoot.matrix.rotate(90,1,0,0);
+    frFoot.matrix = frLegMat;
+    frFoot.matrix.translate(thighF[0]-0.25,thighF[1]+0.48,thighF[2]+0.17);
+    //frFoot.matrix.rotate(90,1,0,0);
     frFoot.matrix.scale(0.1,0.08,.05);
     frFoot.render();
     // -----------------------------------------------------
     // Back L leg
     var blThigh = new Cube();
     blThigh.color = tan; //teal 
-    blThigh.matrix.translate(-1,-.5,0.58);
-    blThigh.matrix.rotate(90,1,0,0);
-    blThigh.matrix.scale(0.15,0.15,0.25);
+    blThigh.matrix.translate(thighB[0],thighB[1]-0.08,thighB[2]+0.04);
+    blThigh.matrix.rotate(g_blLeg,1,0,0);
+    blThigh.matrix.rotate(-1,1,0,0);
+    blThigh.matrix.rotate(-5,0,1,0);
+    var blThighMat = new Matrix4(blThigh.matrix);
+    blThigh.matrix.scale(1.5,1,1);
+    blThigh.matrix.scale(0.15,0.15,0.3);
     blThigh.render();
 
     var blLeg = new Cube();
     blLeg.color = darkBrown; // dark brown
-    blLeg.matrix.translate(-0.95,-0.75,0.6);
-    blLeg.matrix.rotate(90,1,0,0);
+    blLeg.matrix = blThighMat;
+    blLeg.matrix.translate(thighB[0]+0.32,thighB[1]+0.55,thighB[2]-0.05);
+    var blLegMat = new Matrix4(blLeg.matrix);
     blLeg.matrix.scale(0.05,0.05,0.25);
     blLeg.render();
 
     var blFoot = new Cube();
     blFoot.color = darkBrown; // dark brown
-    blFoot.matrix.translate(-0.95,-0.75,0.585);
-    blFoot.matrix.rotate(90,1,0,0);
+    blFoot.matrix = blLegMat;
+    blFoot.matrix.translate(thighB[0]+0.25,thighB[1]+0.5,thighB[2]-0.1);
     blFoot.matrix.scale(0.1,0.08,0.05);
     blFoot.render();
     // -----------------------------------------------------
     // Front L leg
     var flThigh = new Cube();
     flThigh.color = darkBrown; // dark brown
-    flThigh.matrix.translate(-0.05,-.5,0.35);
-    flThigh.matrix.rotate(90,1,0,0);
+    flThigh.matrix.translate(thighF[0],thighF[1]-0.05,thighF[2]+0.20);
+    flThigh.matrix.rotate(g_flLeg,1,0,0);
+    var flThighMat = new Matrix4(flThigh.matrix);
     flThigh.matrix.scale(0.15,0.15,0.25);
     flThigh.render();
 
     var flLeg = new Cube();
     flLeg.color = darkBrown; // dark brown
-    flLeg.matrix.translate(0,-.75,0.4);
-    flLeg.matrix.rotate(90,1,0,0);
+    flLeg.matrix = flThighMat;
+    flLeg.matrix.translate(thighF[0]-0.2,thighF[1]+0.55,thighF[2]+0.33);
+    //flLeg.matrix.rotate(90,1,0,0);
+    var flLegMat = new Matrix4(flLeg.matrix);
     flLeg.matrix.scale(0.05,0.05,0.25);
     flLeg.render();
 
     var flFoot = new Cube();
     flFoot.color = darkBrown; // dark brown
-    flFoot.matrix.translate(0,-0.75,0.385);
-    flFoot.matrix.rotate(90,1,0,0);
+    flFoot.matrix = flLegMat;
+    flFoot.matrix.translate(thighF[0]-0.25,thighF[1]+0.48,thighF[2]+0.17);
+    //flFoot.matrix.rotate(90,1,0,0);
     flFoot.matrix.scale(0.1,0.08,0.05);
     flFoot.render();
     // -----------------------------------------------------
     // Back R Leg
     var brThigh = new Cube();
     brThigh.color = tan; // red
-    brThigh.matrix.translate(-1,-.5,-0.08);
-    brThigh.matrix.rotate(90,1,0,0);
-    brThigh.matrix.scale(0.15,0.15,0.25);
+    brThigh.matrix.translate(thighB[0],thighB[1]-0.08,thighB[2]-0.45);
+    brThigh.matrix.rotate(g_brLeg,1,0,0);
+    brThigh.matrix.rotate(-1,1,0,0);
+    brThigh.matrix.rotate(-5,0,1,0);
+    var brThighMat = new Matrix4(brThigh.matrix);
+    brThigh.matrix.scale(1.5,1,1);
+    brThigh.matrix.scale(0.15,0.15,0.3);
     brThigh.render();
 
     var brLeg = new Cube();
     brLeg.color = darkBrown; // dark brown
-    brLeg.matrix.translate(-0.95,-.75,0);
-    brLeg.matrix.rotate(90,1,0,0);
+    brLeg.matrix = brThighMat;
+    brLeg.matrix.translate(thighB[0]+0.32,thighB[1]+0.55,thighB[2]-0.05);
+    var brLegMat = new Matrix4(brLeg.matrix);
     brLeg.matrix.scale(0.05,0.05,0.25);
     brLeg.render();
 
     var brFoot = new Cube();
     brFoot.color = darkBrown; // dark brown
-    brFoot.matrix.translate(-0.95,-0.75,-0.015);
-    brFoot.matrix.rotate(90,1,0,0);
+    brFoot.matrix = brLegMat;
+    brFoot.matrix.translate(thighB[0]+0.25,thighB[1]+0.5,thighB[2]-0.1);
     brFoot.matrix.scale(0.1,0.08,0.05);
     brFoot.render();
     // -----------------------------------------------------
@@ -300,21 +361,125 @@ function addActionsForHtmlUI(){
     // #region [[ BODY ]]
     var bBody = new Octahedron();;
     // var bBody = new Cube();
-    bBody.color = [1,1,1,1];// red
-    bBody.matrix.translate(-0.15,0.5,0.4);
-    bBody.matrix.rotate(-45,1,0,0.40);
+    bBody.color = tan;
+    bBody.matrix.translate(0.15,0.25,0.025);
+    bBody.matrix.rotate(-45,1,0,0);
     bBody.matrix.scale(0.55,0.75,0.75) // happens first
     bBody.render();
 
-    var fBody = new Octahedron();;
+    var fBody = new Cube();
     // var bBody = new Cube();
-    fBody.color = [1,1,1,1];// red
-    fBody.matrix.translate(0.15,0.5,0.4);
-    fBody.matrix.rotate(45,1,0,0.40);
-    fBody.matrix.scale(0.55,0.75,0.75) // happens first
+    fBody.color = tan; 
+    fBody.matrix.translate(body[0]-.305,body[1]-0.3,body[2]-0.22);
+    fBody.matrix.rotate(90,1,0,0);
+    fBody.matrix.rotate(-90,0,1,0);
+    fBody.matrix.scale(1,.75,1);
+    fBody.matrix.scale(1.5,1,1);
+    fBody.matrix.scale(0.25,0.55,0.55); // happens first
     fBody.render();
+
+    var chest = new Cube();
+    chest.color = darkBrown;
+    chest.matrix.translate(body[0]+0.25,body[1]-0.72,body[2]+0.15);
+    chest.matrix.rotate(60,0,0,1);
+    chest.matrix.scale(1,1,1.2) // happens first
+    chest.matrix.scale(0.25,0.25,0.25) // happens first
+    chest.render();
     //#endregion
 
+    //#region [[ HEAD ]]
+    var head = new Cube();
+    head.color = tan;
+    head.matrix.translate(headB[0],headB[1],headB[2]);
+    head.matrix.rotate(g_head,1,0,0,0);
+    head.matrix.scale(1,1.2,1);
+    head.matrix.scale(1,1,1.8);
+    head.matrix.scale(.25,.25,.25);
+    head.render();
+
+    var snout = new Cube();
+    snout.color = tan;
+    snout.matrix.translate(headB[0]+0.2,headB[1],headB[2]-0.1);
+    snout.matrix.scale(.75,.75,1);
+    snout.matrix.scale(0.2,0.2,0.2);
+    snout.render();
+
+    var nose = new Cube();
+    nose.color = darkBrown;
+    nose.matrix.translate(headB[0]+0.35,headB[1]+0.05,headB[2]-0.17);
+    nose.matrix.scale(0.05,0.05,0.05);
+    nose.render();
+
+    var eye1 = new Cube();
+    eye1.color = darkBrown;
+    eye1.matrix.translate(headB[0]+0.158,headB[1]+0.1,headB[2]-0.02);
+    eye1.matrix.scale(0.1,0.15,0.15);
+    eye1.render();
+
+    var pupil1 = new Cube();
+    pupil1.color = white;
+    pupil1.matrix.translate(headB[0]+0.16,headB[1]+0.15,headB[2]-0.09);
+    pupil1.matrix.scale(0.1,0.05,0.05);
+    pupil1.render();
+
+    var eye2= new Cube();
+    eye2.color = darkBrown;
+    eye2.matrix.translate(headB[0]+0.158,headB[1]+0.1,headB[2]-0.25);
+    eye2.matrix.scale(0.1,0.15,0.15);
+    eye2.render();
+    
+    var pupil2= new Cube();
+    pupil2.color = white;
+    pupil2.matrix.translate(headB[0]+0.16,headB[1]+0.15,headB[2]-0.28);
+    pupil2.matrix.scale(0.1,0.05,0.05);
+    pupil2.render();
+
+    var earL = new Octahedron();
+    earL.color = tan;
+    earL.matrix.translate(headB[0]+.25,headB[1]+.38,headB[2]);
+    earL.matrix.rotate(-15,0,0,1);
+    earL.matrix.scale(0.15,0.25,0.15);
+    earL.render();
+
+    var earR = new Octahedron();
+    earR.color = tan;
+    earR.matrix.translate(headB[0]+.25,headB[1]+.38,headB[2]-.3);
+    earR.matrix.rotate(-15,0,0,1);
+    earR.matrix.scale(0.15,0.25,0.15);
+    earR.render();
+    //#endregion 
+
+    //#region [[ TAIL ]]
+    var tail1 = new Octahedron();
+    tail1.color = tan;
+    tail1.matrix.translate(tailB[0],tailB[1],tailB[2]);
+    tail1.matrix.rotate(g_tail1Angle,0,0,1);
+    tail1.matrix.rotate(g_tail1Sway,1,0,0);
+    var tail1Mat = new Matrix4(tail1.matrix);
+    tail1.matrix.rotate(45,1,0,0);
+    tail1.matrix.scale(0.5,0.5,0.5);
+    tail1.render();
+
+    var tail2 = new Octahedron();
+    tail2.color = darkBrown;
+    tail2.matrix = tail1Mat;
+    tail2.matrix.translate(tailB[0]-0.15,tailB[1]+0.15,tailB[2]-0.38);
+    tail2.matrix.rotate(g_tail2Angle,0,0,1);
+    var tail2Mat = new Matrix4(tail2.matrix);
+    tail2.matrix.rotate(45,1,0,0);
+    tail2.matrix.scale(0.5,0.5,0.5);
+    tail2.render();
+
+    var tail3 = new Octahedron();
+    tail3.color = tan;
+    tail3.matrix = tail2Mat;
+    tail3.matrix.translate(tailB[0]-0.15,tailB[1]+0.15,tailB[2]-0.38);
+    tail3.matrix.rotate(g_tail3Angle,0,0,1);
+    tail3.matrix.rotate(45,1,0,0);
+    tail3.matrix.scale(0.5,0.5,0.5);
+    tail3.render();
+
+    //#endregion
 
     // Check trhe time at the end of the function, and show on webpage
     var duration = performance.now() - startTime;
